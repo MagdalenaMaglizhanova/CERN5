@@ -2,50 +2,50 @@ import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
 
-st.set_page_config(page_title="Симулация на сблъсък - CERN", layout="wide")
+st.set_page_config(page_title="Particle Collision Simulation - CERN", layout="wide")
 
-st.title("Симулация на сблъсък на частици - Образователен модул CERN")
+st.title("Particle Collision Simulation - Educational CERN Module")
 
-st.header("👀 Какво е сблъсък на частици?")
+st.header("What is a particle collision?")
 st.markdown("""
-В ЦЕРН ускорителите сблъскват частици с много високи скорости,  
-за да разберем структурата на материята и вселената.  
-Вижте кратка анимация, която показва как протоните се сблъскват в големия адронен колайдер (LHC).
+At CERN, particle accelerators collide particles at very high speeds  
+to understand the structure of matter and the universe.  
+Watch this short animation showing protons colliding in the Large Hadron Collider (LHC).
 """)
 st.video("https://www.youtube.com/watch?v=Yq0zeWX49SM")
 
 st.markdown("---")
 
-st.header("🧪 Пусни сблъсък с твои стойности")
+st.header("Run a collision with your own values")
 
 col1, col2 = st.columns(2)
 with col1:
-    m1 = st.number_input("Маса на частица 1 (kg)", min_value=0.1, value=5.0, step=0.1)
-    v1 = st.number_input("Скорост на частица 1 (m/s)", value=5.0, step=0.1)
+    m1 = st.number_input("Mass of particle 1 (kg)", min_value=0.1, value=5.0, step=0.1)
+    v1 = st.number_input("Velocity of particle 1 (m/s)", value=5.0, step=0.1)
 with col2:
-    m2 = st.number_input("Маса на частица 2 (kg)", min_value=0.1, value=5.0, step=0.1)
-    v2 = st.number_input("Скорост на частица 2 (m/s)", value=-3.0, step=0.1)
+    m2 = st.number_input("Mass of particle 2 (kg)", min_value=0.1, value=5.0, step=0.1)
+    v2 = st.number_input("Velocity of particle 2 (m/s)", value=-3.0, step=0.1)
 
-collision_type = st.selectbox("Избери тип на сблъсъка:", ["Еластичен", "Нееластичен"])
+collision_type = st.selectbox("Select collision type:", ["Elastic", "Inelastic"])
 
-# Изчисляване на резултати според типа сблъсък
-if collision_type == "Еластичен":
+# Calculate results based on collision type
+if collision_type == "Elastic":
     v1_final = ((m1 - m2) / (m1 + m2)) * v1 + ((2 * m2) / (m1 + m2)) * v2
     v2_final = ((2 * m1) / (m1 + m2)) * v1 + ((m2 - m1) / (m1 + m2)) * v2
 else:
-    # Нееластичен - частиците се слепват
+    # Inelastic collision - particles stick together
     v_final = (m1 * v1 + m2 * v2) / (m1 + m2)
     v1_final = v_final
     v2_final = v_final
 
-# Подготвяне на траектории
+# Prepare trajectories
 t = np.linspace(0, 2, 30)
-if collision_type == "Еластичен":
+if collision_type == "Elastic":
     x1 = v1 * t
     x2 = 10 + v2 * t
 else:
-    # За нееластичен сблъсък показваме движение на двете частици до сблъсък, после с обща скорост
-    collision_time = 10 / (v1 - v2) if v1 != v2 else 1  # приближение за времето на сблъсък
+    # Inelastic collision: particles move separately until collision, then together
+    collision_time = 10 / (v1 - v2) if v1 != v2 else 1
     x1 = np.piecewise(t, [t < collision_time, t >= collision_time],
                       [lambda t: v1 * t, lambda t: v_final * t])
     x2 = np.piecewise(t, [t < collision_time, t >= collision_time],
@@ -56,23 +56,23 @@ for i in range(len(t)):
     frames.append(go.Frame(data=[
         go.Scatter3d(x=[x1[i]], y=[0], z=[0], mode='markers+text',
                      marker=dict(size=10, color='blue'),
-                     text=["Частица 1"], textposition="top center"),
+                     text=["Particle 1"], textposition="top center"),
         go.Scatter3d(x=[x2[i]], y=[0], z=[0], mode='markers+text',
                      marker=dict(size=10, color='red'),
-                     text=["Частица 2"], textposition="top center")
+                     text=["Particle 2"], textposition="top center")
     ]))
 
 layout = go.Layout(
     scene=dict(
-        xaxis=dict(range=[-10, 30], title='Позиция X'),
+        xaxis=dict(range=[-10, 30], title='Position X'),
         yaxis=dict(range=[-5, 5], title='Y'),
         zaxis=dict(range=[-5, 5], title='Z'),
     ),
-    title=f"3D Анимация на {collision_type.lower()} сблъсък",
+    title=f"3D Animation of {collision_type.lower()} collision",
     margin=dict(l=0, r=0, b=0, t=40),
     height=500,
     updatemenus=[dict(type="buttons", showactive=False,
-                      buttons=[dict(label="▶ Пусни анимацията",
+                      buttons=[dict(label="▶ Play animation",
                                     method="animate",
                                     args=[None, {"frame": {"duration": 100, "redraw": True},
                                                  "fromcurrent": True}])])]
@@ -89,7 +89,7 @@ fig = go.Figure(
 
 st.plotly_chart(fig, use_container_width=True)
 
-st.markdown("## 📉 Резултати от сблъсъка")
+st.markdown("## Collision Results")
 
 impulse_before = m1 * v1 + m2 * v2
 impulse_after = m1 * v1_final + m2 * v2_final
@@ -97,39 +97,39 @@ impulse_after = m1 * v1_final + m2 * v2_final
 energy_before = 0.5 * m1 * v1 ** 2 + 0.5 * m2 * v2 ** 2
 energy_after = 0.5 * m1 * v1_final ** 2 + 0.5 * m2 * v2_final ** 2
 
-st.write(f"**Импулс преди сблъсъка:** {impulse_before:.2f} kg·m/s")
-st.write(f"**Импулс след сблъсъка:** {impulse_after:.2f} kg·m/s")
-st.write(f"**Кинетична енергия преди сблъсъка:** {energy_before:.2f} J")
-st.write(f"**Кинетична енергия след сблъсъка:** {energy_after:.2f} J")
+st.write(f"**Momentum before collision:** {impulse_before:.2f} kg·m/s")
+st.write(f"**Momentum after collision:** {impulse_after:.2f} kg·m/s")
+st.write(f"**Kinetic energy before collision:** {energy_before:.2f} J")
+st.write(f"**Kinetic energy after collision:** {energy_after:.2f} J")
 
 energy_loss = energy_before - energy_after
-if collision_type == "Нееластичен":
-    st.write(f"**Загуба на кинетична енергия:** {energy_loss:.2f} J (превръща се в топлина/деформация)")
+if collision_type == "Inelastic":
+    st.write(f"**Energy lost in collision:** {energy_loss:.2f} J (converted to heat/deformation)")
 
 st.markdown("---")
 
-st.header("🤔 Въпроси за размисъл")
+st.header("Reflection Questions")
 
 st.markdown("""
-- Запазва ли се импулсът?  
-- Запазва ли се кинетичната енергия?  
-- Как се променят скоростите при различните типове сблъсъци?  
-- Какво означава, ако кинетичната енергия намалява?  
+- Is momentum conserved?  
+- Is kinetic energy conserved?  
+- How do the velocities change for different collision types?  
+- What does it mean if kinetic energy decreases?  
 """)
 
-st.header("✍️ Въведи своя хипотеза за резултата от сблъсъка:")
+st.header("Enter your hypothesis about the collision result:")
 
-hypothesis = st.text_area("Какво очакваш да се случи със скоростите и енергията?")
+hypothesis = st.text_area("What do you expect to happen to velocities and energy?")
 
-if st.button("Изпрати хипотезата"):
+if st.button("Submit hypothesis"):
     if hypothesis.strip() == "":
-        st.warning("Моля, въведи текст за хипотезата си.")
+        st.warning("Please enter your hypothesis.")
     else:
         if "hypotheses" not in st.session_state:
             st.session_state.hypotheses = []
         st.session_state.hypotheses.append(hypothesis)
-        st.success("Хипотезата ти е изпратена! Много добре, че мислиш активно!")
+        st.success("Your hypothesis has been submitted! Great job thinking actively!")
 
-        st.markdown("### Примерни хипотези на други ученици:")
+        st.markdown("### Sample hypotheses from other students:")
         for i, hyp in enumerate(st.session_state.hypotheses[-5:], 1):
             st.write(f"{i}. {hyp}")
