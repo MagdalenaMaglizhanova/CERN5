@@ -8,9 +8,8 @@ st.title("Particle Collision Simulation - Educational CERN Module")
 
 st.header("What is a particle collision?")
 st.markdown("""
-At CERN, particle accelerators collide particles at very high speeds  
-to understand the structure of matter and the universe.  
-Watch this short animation showing protons colliding in the Large Hadron Collider (LHC).
+At CERN, particle accelerators collide particles at extremely high speeds to help scientists understand the structure of matter and the universe.
+Watch this short animation that shows protons colliding inside the Large Hadron Collider (LHC).
 """)
 st.video("https://www.youtube.com/watch?v=Yq0zeWX49SM")
 
