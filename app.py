@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import plotly.graph_objects as go
 import numpy as np
 
@@ -43,7 +44,6 @@ if collision_type == "Elastic":
     x1 = v1 * t
     x2 = 10 + v2 * t
 else:
-    # Inelastic collision: particles move separately until collision, then together
     collision_time = 10 / (v1 - v2) if v1 != v2 else 1
     x1 = np.piecewise(t, [t < collision_time, t >= collision_time],
                       [lambda t: v1 * t, lambda t: v_final * t])
@@ -132,3 +132,115 @@ if st.button("Submit hypothesis"):
         st.markdown("### Sample hypotheses from other students:")
         for i, hyp in enumerate(st.session_state.hypotheses[-5:], 1):
             st.write(f"{i}. {hyp}")
+
+# === Вграден THREE.js 3D particles код, показващ сблъсък ===
+
+three_js_html = """
+<div id="three-container" style="width:100%; height:600px;"></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.142.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.142.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+  const container = document.getElementById('three-container');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
+
+  const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+  camera.position.z = 60;
+
+  const renderer = new THREE.WebGLRenderer({antialias: true});
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+  function createBeam(direction = 1) {
+    const particleCount = 1000;
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const velocities = [];
+
+    for(let i=0; i<particleCount; i++) {
+      const angle = Math.random()*2*Math.PI;
+      const radius = Math.random()*2;
+      const z = (Math.random() - 0.5)*2;
+
+      const x = radius * Math.cos(angle);
+      const y = radius * Math.sin(angle);
+
+      positions.push(x, y, z + direction*40);
+      velocities.push(0, 0, -direction*(0.5 + Math.random()));
+    }
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('velocity', new THREE.Float32BufferAttribute(velocities, 3));
+
+    const material = new THREE.PointsMaterial({
+      color: 0x44ccff,
+      size: 0.3,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending
+    });
+
+    return new THREE.Points(geometry, material);
+  }
+
+  const beam1 = createBeam(1);
+  const beam2 = createBeam(-1);
+  scene.add(beam1);
+  scene.add(beam2);
+
+  const starGeometry = new THREE.BufferGeometry();
+  const starPositions = [];
+  for(let i=0; i<200; i++) {
+    starPositions.push((Math.random()-0.5)*100, (Math.random()-0.5)*100, (Math.random()-0.5)*100);
+  }
+  starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+  const starMaterial = new THREE.PointsMaterial({color: 0xffffff});
+  const stars = new THREE.Points(starGeometry, starMaterial);
+  scene.add(stars);
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    const positions1 = beam1.geometry.attributes.position.array;
+    const velocities1 = beam1.geometry.attributes.velocity.array;
+    const positions2 = beam2.geometry.attributes.position.array;
+    const velocities2 = beam2.geometry.attributes.velocity.array;
+
+    for(let i=0; i<positions1.length; i+=3) {
+      positions1[i+2] += velocities1[i+2];
+      if(positions1[i+2] < 0) {
+        positions1[i] = (Math.random()*4 - 2);
+        positions1[i+1] = (Math.random()*4 - 2);
+        positions1[i+2] = 40;
+        velocities1[i+2] = -(0.5 + Math.random());
+      }
+    }
+    beam1.geometry.attributes.position.needsUpdate = true;
+
+    for(let i=0; i<positions2.length; i+=3) {
+      positions2[i+2] += velocities2[i+2];
+      if(positions2[i+2] > 0) {
+        positions2[i] = (Math.random()*4 - 2);
+        positions2[i+1] = (Math.random()*4 - 2);
+        positions2[i+2] = -40;
+        velocities2[i+2] = 0.5 + Math.random();
+      }
+    }
+    beam2.geometry.attributes.position.needsUpdate = true;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+</script>
+"""
+
+components.html(three_js_html, height=600, scrolling=False)
